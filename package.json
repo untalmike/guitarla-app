@@ -1,13 +1,13 @@
 {
-  "name": "guitarla-app",
+  "name": "gutarla",
   "private": true,
-  "version": "0.1.0",
-  "description": "A Strapi application",
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "develop": "strapi develop",
-    "start": "strapi start",
-    "build": "strapi build",
-    "strapi": "strapi"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@strapi/plugin-i18n": "4.12.0",
