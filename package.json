@@ -10,48 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.25.0",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react-swc": "^3.9.0",
-    "eslint": "^9.25.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
-    "vite": "^6.3.5"
+    "@strapi/plugin-i18n": "^4.25.22",
+    "@strapi/plugin-users-permissions": "^4.25.22",
+    "@strapi/strapi": "^4.25.22",
+    "mysql": "2.18.1",
+    "ws": "^8.17.0"
   }
-}
-{
-  "name": "guitarla-app",
-  "private": true,
-  "version": "0.1.0",
-  "description": "A Strapi application",
-  "scripts": {
-    "develop": "strapi develop",
-    "start": "strapi start",
-    "build": "strapi build",
-    "strapi": "strapi"
-  },
-  "devDependencies": {},
-  "dependencies": {
-    "@strapi/strapi": "4.12.0",
-    "@strapi/plugin-users-permissions": "4.12.0",
-    "@strapi/plugin-i18n": "4.12.0",
-    "mysql": "2.18.1"
-  },
-  "author": {
-    "name": "A Strapi developer"
-  },
-  "strapi": {
-    "uuid": "ec29ed8a-b236-491d-a3ab-f7456ad7a71f"
-  },
-  "engines": {
-    "node": ">=14.19.1 <=18.x.x",
-    "npm": ">=6.0.0"
-  },
-  "license": "MIT"
 }
