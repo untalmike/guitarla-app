@@ -1,3 +1,4 @@
+// @ts-nocheck
 import './App.css'
 import { useState, useEffect } from 'react'
 import Guitar from './components/Guitar'
@@ -12,9 +13,13 @@ export default function App() {
     
     function addToCart(item) {
         
-
-
-        setCart(prevCart => [...prevCart, item])
+        const itemExists = cart.findIndex((guitar) => guitar.id === item.id)
+        if(itemExists >= 0) {
+            console.log("La guitarra ya está en el carrito")
+        } else {
+            item.quantity = 1
+            setCart(prevCart => [...prevCart, item])
+        }
     }
 
   return (
