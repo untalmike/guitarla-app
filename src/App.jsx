@@ -18,7 +18,7 @@ export default function App() {
             console.log("La guitarra ya está en el carrito")
         } else {
             item.quantity = 1
-            setCart(prevCart => [...prevCart, item])
+            setCart([...cart, item])
         }
     }
 
