@@ -7,7 +7,7 @@ import { db } from './data/db'
 
 export default function App() {
 
-    // State
+    // States
     const [data, setData] = useState(db)
     const [cart, setCart] = useState([])
     
@@ -15,7 +15,9 @@ export default function App() {
         
         const itemExists = cart.findIndex((guitar) => guitar.id === item.id)
         if(itemExists >= 0) {
-            console.log("La guitarra ya está en el carrito")
+            const updatedCart = [...cart]
+            updatedCart[itemExists].quantity++
+            setCart(updatedCart)
         } else {
             item.quantity = 1
             setCart([...cart, item])
