@@ -1,80 +1,77 @@
 #!/bin/bash
+# Cargar configuración persistente si existe
+[ -f ~/.asistente_config ] && source ~/.asistente_config
 
-# controladores
-# proyectos = ("guitarla-app", "mailbox")
+# Pila de funciones para procesos de Git Bash
+# Registrar path de proyectos
+  function config_path {
+    read -p "🛠️ Ingresa la ruta que deseas agregar al PATH (formato tipo /c/Users/diamp/...): " nueva_ruta
 
-# Bienvenida
-echo "🚀 Bienvenido al asistente Git Bash "
-echo "Estas son algunas acciones que puedo realizar"
-echo "_____________________________________________"
-
-# Menú general
-echo "1️⃣ Ir a proyecto"
-echo "2️⃣ Realizar pull request"
-echo "3️⃣ Checkout entre ramas"
-echo "4️⃣ Realizar merge"
-echo "5️⃣ Realizar push"
-echo "6️⃣ Configurar tus claves de git en el sistema"
-echo "7️⃣ Salir"
-read -p "Espero tu selección" seleccion
-
-  validas = ("1", "2", "3", "4", "5", "6", "7")
-  finded = false
-  for valida in  "${validas[@]}"; do
-    if [["$seleccion" == "$valida"]]; then
-      finded = true
-      break
-    fi
-  done
-
-  if ! $finded; then
-    echo "❌ Opción incorrecta, favor de validar tu selección"
-  else
-  
-
-    # Sección para realizar un checkout entre ramas
-    if [[ "$seleccion" == "1"]]; then
-      read -p " Introduce el nombre del proyecto al que quieres acceder: " proyecto
-      if [[ $? -ne 0]]; then
-        echo "Lo siento, al parecer el proyecto mencionado no existe"
-      else
-        echo " Cambiando al proyecto '$proyecto'... "
-        cd C:/Users/diamp/Documents/projects/"$proyecto"
-        echo "✅ Cambio realizado con éxito"
+    # Evita duplicados en el PATH
+    if [[ ":$PATH:" == *":$nueva_ruta:"* ]]; then
+      echo "ℹ️ La ruta ya está en el PATH."
+    else
+      echo "export PATH=\"\$PATH:$nueva_ruta\"" >> ~/.bashrc
+      echo "✅ Ruta agregada al PATH de manera permanente."
     fi
 
-    # Sección para realizar un checkout entre ramas
-    if [[ "$seleccion" == "3"]]; then    
-      read -p "🌿 Indica a que rama deseas cambiar: " rama
-      
-      if [[ $? -ne 0 ]]; then
-        echo "⚠️  Error al cambiar de rama. Asegúrate de que '$rama' existe."
-      else
-        echo "🔁 Cambiando a la rama solicitada... '$rama'" 
-        git checkout "$rama"
-        echo "✅ Cambio exitoso a '$rama'."
+    # Registrar en archivo de configuración
+    if ! grep -q "RUTA_PERSONAL_PROYECTOS=" ~/.asistente_config 2>/dev/null; then
+      echo "export RUTA_PERSONAL_PROYECTOS=\"$nueva_ruta\"" >> ~/.asistente_config
+      echo "📁 Ruta guardada como base para tus proyectos."
+    else
+      # Reemplazar si ya existía
+      sed -i "s|^export RUTA_PERSONAL_PROYECTOS=.*|export RUTA_PERSONAL_PROYECTOS=\"$nueva_ruta\"|" ~/.asistente_config
+      echo "📌 Ruta base actualizada."
     fi
 
-    # Sección para realizar pull a github
-    if [[ "$seleccion" == "5"]]; then    
-        # Pedir mensaje de commit
-        read -p "📝 Escribe el mensaje del commit: " mensaje
+    # Aplicar cambios en sesión actual
+    export RUTA_PERSONAL_PROYECTOS="$nueva_ruta"
+  }
 
-        # Confirmar la rama actual
-        read -p "🌿 Escribe el nombre de la rama (por ejemplo, main): " rama
+  # función para realizar un checkout entre ramas
+  function changing_project {
+    if [[ -z "$RUTA_PERSONAL_PROYECTOS" ]]; then
+      echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 8 primero."
+      return
+    fi
 
-        if [ -z "$rama" ]; then
-          rama="main"
-        fi
+    read -p "🔍 Introduce el nombre del proyecto al que quieres acceder: " proyecto
+    ruta="$RUTA_PERSONAL_PROYECTOS/$proyecto"
 
-        # Confirmar antes de continuar
-        echo ""
-        echo "Resumen:"
-        echo "Mensaje del commit: $mensaje"
-        echo "Rama: $rama"
-        read -p "¿Deseas continuar con el push? (s/n): " confirmacion
+    if [ -d "$ruta" ]; then
+      cd "$ruta"
+      echo "✅ Cambio realizado con éxito a '$ruta'."
+    else
+      echo "❌ Proyecto no encontrado en la ruta: $ruta"
+    fi
+  }
 
-        if [[ "$confirmacion" == "s" || "$confirmacion" == "S" ]]; then
+  # Sección para realizar un checkout entre ramas
+  function checkout_branches {
+    read -p "🌿 Indica a que rama deseas cambiar: " rama
+    git checkout "$rama" 2>/dev/null
+    if [[ $? -ne 0 ]]; then
+      echo "⚠️  Error al cambiar de rama. Asegúrate de que '$rama' existe."
+    else
+      echo "✅ Cambio exitoso a '$rama'."
+    fi
+  }
+
+  # Sección para realizar pull a github
+  function git_push {
+    read -p "📝 Escribe el mensaje del commit: " mensaje
+    read -p "🌿 Escribe el nombre de la rama (por ejemplo, main): " rama
+    rama=${rama:-main}
+    
+    # Confirmar antes de continuar
+    echo ""
+    echo "Resumen:"
+    echo "Mensaje del commit: $mensaje"
+    echo "Rama: $rama"
+    read -p "¿Deseas continuar con el push? (s/n): " confirmacion
+
+    if [[ "$confirmacion" =~ ^[sS]$ ]]; then
           git add .
           git commit -m "$mensaje"
           git push origin "$rama"
@@ -82,3 +79,68 @@ read -p "Espero tu selección" seleccion
         else
           echo "❌ Operación cancelada."
     fi
+  }
+
+
+while true; do
+
+  # Bienvenida
+  echo "🚀 Bienvenido al asistente Git Bash "
+  echo "Estas son algunas acciones que puedo realizar"
+  echo "_____________________________________________"
+
+  # Menú general
+  echo "1️⃣ Congifurar ruta de proyecto"
+  echo "2️⃣ Ir a proyecto"
+  echo "3️⃣ Realizar pull request"
+  echo "4️⃣ Checkout entre ramas"
+  echo "5️⃣ Realizar merge"
+  echo "6️⃣ Realizar push"
+  echo "7️⃣ Configurar tus claves de git en el sistema"
+  echo "8 Salir"
+
+  read -p "Espero tu selección" seleccion
+
+  # llamado de funciones
+  case "$seleccion" in
+    1) config_path ;;
+    2) changing_project ;;
+    3) ;;
+    4) checkout_branches ;;
+    5) ;;
+    6) git_push ;;
+    7) ;;
+    8) exit 1;;
+    *) echo "📌 Esa funcionalidad aún está en desarrollo. ¿La construimos juntos?" ;;
+  esac
+
+  echo ""
+  read -p "Presiona enter para volver al menú..."
+done
+
+  validas=("1" "2" "3" "4" "5" "6" "7" "8")
+  finded=false
+  for opcion in  "${validas[@]}"; do
+    if [[ "$seleccion" == "$opcion" ]]; then
+      finded=true
+      echo "✅ Opción válida seleccionada: $seleccion"
+      break
+    fi
+  done
+
+  if ! $finded; then
+    echo "❌ Opción incorrecta, favor de validar tu selección"
+    exit 1
+  fi
+
+# Fin del script
+# Manejo global de errores
+trap 'echo -e "\n💥 Ocurrió un error inesperado en la línea $LINENO. Revisa tu entrada o permisos."; read -p "Presiona Enter para salir..."' ERR
+
+# Evita que el script se cierre automáticamente al terminar
+function pausar_final {
+  echo ""
+  read -p "🛑 Presiona Enter para salir..."
+}
+echo "👋 Gracias por usar el asistente Git Bash. ¡Hasta luego!"
+pausar_final
