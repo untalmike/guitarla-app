@@ -58,6 +58,83 @@
     fi
   }
 
+  # Sección para comprobar el estado del repositorio
+  check_git_status() {
+    local branch
+    branch=$(git rev-parse --abbrev-ref HEAD)
+
+    git fetch origin &>/dev/null
+
+    local local_commit remote_commit base_commit
+    local_commit=$(git rev-parse "$branch")
+    remote_commit=$(git rev-parse "origin/$branch")
+    base_commit=$(git merge-base "$branch" "origin/$branch")
+
+    if [[ "$local_commit" == "$remote_commit" ]]; then
+        echo "✅ Todo está sincronizado. No se necesita ni pull ni push."
+    elif [[ "$local_commit" == "$base_commit" ]]; then
+        echo "⬇️ Tu rama está detrás de la remota. Haz un git pull."
+    elif [[ "$remote_commit" == "$base_commit" ]]; then
+        echo "⬆️ Tu rama está adelante de la remota. Haz un git push."
+    else
+        echo "⚠️ Tu rama y el remoto han divergido. Posible rebase o conflictos por resolver."
+    fi
+  }
+
+  # Autopull en caso de ser requerido
+  auto_pull_if_needed() {
+    local branch status
+    branch=$(git rev-parse --abbrev-ref HEAD)
+
+    # Ejecutar verificación
+    status=$(check_git_status)
+
+    if [[ "$status" == *"Haz un git pull."* ]]; then
+        echo "ℹ️ Realizando git pull para la rama '$branch'..."
+        git pull origin "$branch"
+    else
+        echo "✅ No es necesario hacer pull: $status"
+    fi
+  }
+
+  # Función para realizar merge entre ramas
+  merge_branches() {
+    read -p "🔀 ¿Desde qué rama quieres hacer merge (source)? " source_branch
+    read -p "➡️  ¿A qué rama quieres aplicar el merge (target)? " target_branch
+
+    # Guardamos la rama actual para poder volver al final
+    current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+    echo "💡 Verificando ramas disponibles..."
+    git fetch origin &>/dev/null
+
+    if ! git show-ref --verify --quiet "refs/heads/$source_branch"; then
+        echo "❌ La rama fuente '$source_branch' no existe localmente."
+        return 1
+    fi
+
+    if ! git show-ref --verify --quiet "refs/heads/$target_branch"; then
+        echo "❌ La rama destino '$target_branch' no existe localmente."
+        return 1
+    fi
+
+    echo "🚀 Cambiando a la rama destino '$target_branch'..."
+    git checkout "$target_branch" || return 1
+
+    echo "🔄 Actualizando rama destino desde remoto..."
+    git pull origin "$target_branch"
+
+    echo "🔀 Realizando merge desde '$source_branch'..."
+    if git merge "$source_branch"; then
+        echo "✅ Merge exitoso."
+    else
+        echo "⚠️ Conflictos detectados. Resuélvelos antes de continuar."
+    fi
+
+    echo "🔙 Volviendo a tu rama original ($current_branch)..."
+    git checkout "$current_branch"
+  }
+
   # Sección para realizar pull a github
   function git_push {
     read -p "📝 Escribe el mensaje del commit: " mensaje
@@ -81,6 +158,37 @@
     fi
   }
 
+  # Configuración de credenciales de GitHub
+  update_github_credentials() {
+    echo "🔐 Actualizando credenciales de GitHub..."
+
+    read -p "Ingrese su nombre de usuario de GitHub: " github_user
+    read -s -p "Ingrese su token personal de acceso (PAT): " github_token
+    echo ""
+
+    # Formato de URL para almacenar credenciales
+    git_credential_url="https://${github_user}:${github_token}@github.com"
+
+    # Guardar en el helper de credenciales (si está disponible)
+    git config --global credential.helper store
+    echo "https://${github_user}:${github_token}@github.com" > ~/.git-credentials
+
+    echo "✅ Credenciales actualizadas correctamente."
+
+    # Opcional: prueba de autenticación
+    echo "🌐 Probando autenticación..."
+    if git ls-remote "$git_credential_url" &>/dev/null; then
+        echo "🔗 Autenticación exitosa con GitHub."
+    else
+        echo "❌ Falló la autenticación. Verifica tus credenciales."
+    fi
+  }
+
+  salida() {
+    echo "👋 Gracias por usar el asistente Git Bash. ¡Hasta luego!"
+    exit 0
+  }
+
 
 while true; do
 
@@ -90,14 +198,15 @@ while true; do
   echo "_____________________________________________"
 
   # Menú general
-  echo "1️⃣ Congifurar ruta de proyecto"
-  echo "2️⃣ Ir a proyecto"
-  echo "3️⃣ Realizar pull request"
-  echo "4️⃣ Checkout entre ramas"
-  echo "5️⃣ Realizar merge"
-  echo "6️⃣ Realizar push"
-  echo "7️⃣ Configurar tus claves de git en el sistema"
-  echo "8 Salir"
+  echo "1 Congifurar ruta de proyecto"
+  echo "2 Ir a proyecto"
+  echo "3 Checkout entre ramas"
+  echo "4 Comprobar estado del repositorio"
+  echo "5 Realizar pull automático"
+  echo "6 Realizar merge"
+  echo "7 Realizar push"
+  echo "8 Configurar tus claves de git en el sistema"
+  echo "9 Salir"
 
   read -p "Espero tu selección" seleccion
 
@@ -105,12 +214,13 @@ while true; do
   case "$seleccion" in
     1) config_path ;;
     2) changing_project ;;
-    3) ;;
-    4) checkout_branches ;;
-    5) ;;
-    6) git_push ;;
-    7) ;;
-    8) exit 1;;
+    3) checkout_branches ;;
+    4) check_git_status ;;
+    5) auto_pull_if_needed ;;
+    6) ;;
+    7) git_push ;;
+    8) update_github_credentials ;;
+    9) salida ;;
     *) echo "📌 Esa funcionalidad aún está en desarrollo. ¿La construimos juntos?" ;;
   esac
 
@@ -142,5 +252,4 @@ function pausar_final {
   echo ""
   read -p "🛑 Presiona Enter para salir..."
 }
-echo "👋 Gracias por usar el asistente Git Bash. ¡Hasta luego!"
 pausar_final
