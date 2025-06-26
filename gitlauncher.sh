@@ -208,7 +208,7 @@ while true; do
   echo "8 Configurar tus claves de git en el sistema"
   echo "9 Salir"
 
-  read -p "Espero tu selección" seleccion
+  read -p "Espero tu selección: " seleccion
 
   # llamado de funciones
   case "$seleccion" in
@@ -217,7 +217,7 @@ while true; do
     3) checkout_branches ;;
     4) check_git_status ;;
     5) auto_pull_if_needed ;;
-    6) ;;
+    6) merge_branches;;
     7) git_push ;;
     8) update_github_credentials ;;
     9) salida ;;
