@@ -32,15 +32,16 @@
   # función para realizar un checkout entre ramas
   function changing_project {
     if [[ -z "$RUTA_PERSONAL_PROYECTOS" ]]; then
-      echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 8 primero."
+      echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 1 primero."
       return
     fi
 
     read -p "🔍 Introduce el nombre del proyecto al que quieres acceder: " proyecto
-    ruta="$RUTA_PERSONAL_PROYECTOS/$proyecto"
-
-    if [ -d "$ruta" ]; then
-      cd "$ruta"
+    base="$RUTA_PERSONAL_PROYECTOS"
+    ruta="$proyecto"
+  
+    if [ -d "$base/$ruta" ]; then
+      cd "$base/$ruta"
       echo "✅ Cambio realizado con éxito a '$ruta'."
     else
       echo "❌ Proyecto no encontrado en la ruta: $ruta"
@@ -193,12 +194,18 @@
 while true; do
 
   # Bienvenida
+  base="$RUTA_PERSONAL_PROYECTOS/"
+  ruta="$proyecto"
   echo "🚀 Bienvenido al asistente Git Bash "
+  echo "_____________________________________________"
+  echo "Actualmente estás en esta ruta: $base"
+  echo "Te encuentras en este proyecto: $ruta"
+  echo "_____________________________________________"
   echo "Estas son algunas acciones que puedo realizar"
   echo "_____________________________________________"
 
   # Menú general
-  echo "1 Congifurar ruta de proyecto"
+  echo "1 Congifurar carpeta principal" 
   echo "2 Ir a proyecto"
   echo "3 Checkout entre ramas"
   echo "4 Comprobar estado del repositorio"
