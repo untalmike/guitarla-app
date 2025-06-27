@@ -4,7 +4,7 @@
 
 # Pila de funciones para procesos de Git Bash
 # Registrar path de proyectos
-  function config_path {
+  config_path() {
     read -p "🛠️ Ingresa la ruta que deseas agregar al PATH (formato tipo /c/Users/diamp/...): " nueva_ruta
 
     # Evita duplicados en el PATH
@@ -30,17 +30,18 @@
   }
 
   # función para realizar un checkout entre ramas
-  function changing_project {
+  changing_project() {
     if [[ -z "$RUTA_PERSONAL_PROYECTOS" ]]; then
-      echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 8 primero."
+      echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 1 primero."
       return
     fi
 
     read -p "🔍 Introduce el nombre del proyecto al que quieres acceder: " proyecto
-    ruta="$RUTA_PERSONAL_PROYECTOS/$proyecto"
-
-    if [ -d "$ruta" ]; then
-      cd "$ruta"
+    base="$RUTA_PERSONAL_PROYECTOS"
+    ruta="$proyecto"
+  
+    if [ -d "$base/$ruta" ]; then
+      cd "$base/$ruta"
       echo "✅ Cambio realizado con éxito a '$ruta'."
     else
       echo "❌ Proyecto no encontrado en la ruta: $ruta"
@@ -48,7 +49,7 @@
   }
 
   # Sección para realizar un checkout entre ramas
-  function checkout_branches {
+  checkout_branches() {
     read -p "🌿 Indica a que rama deseas cambiar: " rama
     git checkout "$rama" 2>/dev/null
     if [[ $? -ne 0 ]]; then
@@ -136,7 +137,7 @@
   }
 
   # Sección para realizar pull a github
-  function git_push {
+  git_push() {
     read -p "📝 Escribe el mensaje del commit: " mensaje
     read -p "🌿 Escribe el nombre de la rama (por ejemplo, main): " rama
     rama=${rama:-main}
@@ -184,6 +185,30 @@
     fi
   }
 
+  upload_new_repo() {
+    base="$RUTA_PERSONAL_PROYECTOS"
+    echo "Iniciaremos el alta en el repositorio, necesitamos algunos datos: "
+
+    read -p "Indique el nombre del proyecto: " proyecto
+    if [ -d "$base/$proyecto" ]; then
+      cd "$base/$proyecto"
+      echo "✅ Cambio realizado con éxito a '$proyecto'."
+    else
+      echo "❌ Proyecto no encontrado en la proyecto: $proyecto"
+    fi
+
+    echo "# $proyecto" >> README.md
+    git init
+    git add README.md
+    git commit -m "first commit"
+    git branch -M main
+    git remote add origin https://github.com/untalmike/"$proyecto".git
+    git push -u origin main
+
+    echo "🫰🏻 Repositorio cargado correctamente"
+
+  }
+
   salida() {
     echo "👋 Gracias por usar el asistente Git Bash. ¡Hasta luego!"
     exit 0
@@ -193,20 +218,27 @@
 while true; do
 
   # Bienvenida
+  base="$RUTA_PERSONAL_PROYECTOS/"
+  ruta="$proyecto"
   echo "🚀 Bienvenido al asistente Git Bash "
-  echo "Estas son algunas acciones que puedo realizar"
+  echo "_____________________________________________"
+  echo "📂 Actualmente estás en esta ruta: $base"
+  echo "🎯 Te encuentras en este proyecto: $ruta"
+  echo "_____________________________________________"
+  echo "🫰🏻 Estas son algunas acciones que puedo realizar"
   echo "_____________________________________________"
 
   # Menú general
-  echo "1 Congifurar ruta de proyecto"
-  echo "2 Ir a proyecto"
-  echo "3 Checkout entre ramas"
-  echo "4 Comprobar estado del repositorio"
-  echo "5 Realizar pull automático"
-  echo "6 Realizar merge"
-  echo "7 Realizar push"
-  echo "8 Configurar tus claves de git en el sistema"
-  echo "9 Salir"
+  echo "1️⃣ Congifurar carpeta principal" 
+  echo "2️⃣ Ir a proyecto"
+  echo "3️⃣ Checkout entre ramas"
+  echo "4️⃣ Comprobar estado del repositorio"
+  echo "5️⃣ Realizar pull automático"
+  echo "6️⃣ Realizar merge"
+  echo "7️⃣ Realizar push"
+  echo "8️⃣ Cargar a nuevo repositorio"
+  echo "9️⃣ Configurar tus claves de git en el sistema"
+  echo "🔟 Salir"
 
   read -p "Espero tu selección: " seleccion
 
@@ -219,8 +251,9 @@ while true; do
     5) auto_pull_if_needed ;;
     6) merge_branches;;
     7) git_push ;;
-    8) update_github_credentials ;;
-    9) salida ;;
+    8) upload_new_repo ;;
+    9) update_github_credentials ;;
+    10) salida ;;
     *) echo "📌 Esa funcionalidad aún está en desarrollo. ¿La construimos juntos?" ;;
   esac
 
