@@ -4,7 +4,7 @@
 
 # Pila de funciones para procesos de Git Bash
 # Registrar path de proyectos
-  function config_path {
+  config_path() {
     read -p "🛠️ Ingresa la ruta que deseas agregar al PATH (formato tipo /c/Users/diamp/...): " nueva_ruta
 
     # Evita duplicados en el PATH
@@ -30,7 +30,7 @@
   }
 
   # función para realizar un checkout entre ramas
-  function changing_project {
+  changing_project() {
     if [[ -z "$RUTA_PERSONAL_PROYECTOS" ]]; then
       echo "⚠️ Aún no has configurado una ruta base. Ve a la opción 1 primero."
       return
@@ -49,7 +49,7 @@
   }
 
   # Sección para realizar un checkout entre ramas
-  function checkout_branches {
+  checkout_branches() {
     read -p "🌿 Indica a que rama deseas cambiar: " rama
     git checkout "$rama" 2>/dev/null
     if [[ $? -ne 0 ]]; then
@@ -137,7 +137,7 @@
   }
 
   # Sección para realizar pull a github
-  function git_push {
+  git_push() {
     read -p "📝 Escribe el mensaje del commit: " mensaje
     read -p "🌿 Escribe el nombre de la rama (por ejemplo, main): " rama
     rama=${rama:-main}
@@ -185,6 +185,30 @@
     fi
   }
 
+  upload_new_repo() {
+    base="$RUTA_PERSONAL_PROYECTOS"
+    echo "Iniciaremos el alta en el repositorio, necesitamos algunos datos: "
+
+    read -p "Indique el nombre del proyecto: " proyecto
+    if [ -d "$base/$proyecto" ]; then
+      cd "$base/$proyecto"
+      echo "✅ Cambio realizado con éxito a '$proyecto'."
+    else
+      echo "❌ Proyecto no encontrado en la proyecto: $proyecto"
+    fi
+
+    echo "# $proyecto" >> README.md
+    git init
+    git add README.md
+    git commit -m "first commit"
+    git branch -M main
+    git remote add origin https://github.com/untalmike/"$proyecto".git
+    git push -u origin main
+
+    echo "🫰🏻 Repositorio cargado correctamente"
+
+  }
+
   salida() {
     echo "👋 Gracias por usar el asistente Git Bash. ¡Hasta luego!"
     exit 0
@@ -212,8 +236,9 @@ while true; do
   echo "5️⃣ Realizar pull automático"
   echo "6️⃣ Realizar merge"
   echo "7️⃣ Realizar push"
-  echo "8️⃣ Configurar tus claves de git en el sistema"
-  echo "9️⃣ Salir"
+  echo "8️⃣ Cargar a nuevo repositorio"
+  echo "9️⃣ Configurar tus claves de git en el sistema"
+  echo "🔟 Salir"
 
   read -p "Espero tu selección: " seleccion
 
@@ -226,8 +251,9 @@ while true; do
     5) auto_pull_if_needed ;;
     6) merge_branches;;
     7) git_push ;;
-    8) update_github_credentials ;;
-    9) salida ;;
+    8) upload_new_repo ;;
+    9) update_github_credentials ;;
+    10) salida ;;
     *) echo "📌 Esa funcionalidad aún está en desarrollo. ¿La construimos juntos?" ;;
   esac
 
